@@ -110,6 +110,59 @@ var update = (update) => {
   if (state.content.mathjax) {
     setTimeout(() => mj.render(), 60)
   }
+
+  setTimeout(() => addCopyButtons(), 80)
+}
+
+var addCopyButtons = () => {
+  var preElements = document.querySelectorAll('#_html pre')
+  preElements.forEach((pre) => {
+    if (pre.querySelector('code.mermaid') || pre.querySelector('svg[id^=mermaid]')) {
+      return
+    }
+    if (pre.querySelector('.markdown-copy-button')) {
+      return
+    }
+
+    var button = document.createElement('button')
+    button.className = 'markdown-copy-button'
+    button.type = 'button'
+    button.title = 'Copy code'
+    button.setAttribute('aria-label', 'Copy code')
+
+    button.innerHTML = `
+      <svg class="copy-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      <svg class="check-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    `
+
+    button.addEventListener('click', () => {
+      var codeElement = pre.querySelector('code')
+      var text = codeElement ? codeElement.innerText : pre.innerText
+
+      navigator.clipboard.writeText(text).then(() => {
+        var copyIcon = button.querySelector('.copy-icon')
+        var checkIcon = button.querySelector('.check-icon')
+        copyIcon.style.display = 'none'
+        checkIcon.style.display = 'inline'
+        button.classList.add('copied')
+
+        setTimeout(() => {
+          copyIcon.style.display = 'inline'
+          checkIcon.style.display = 'none'
+          button.classList.remove('copied')
+        }, 2000)
+      }).catch((err) => {
+        console.error('Failed to copy text: ', err)
+      })
+    })
+
+    pre.appendChild(button)
+  })
 }
 
 var render = (md) => {
